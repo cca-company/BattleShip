@@ -1,11 +1,25 @@
-// BattleShip.cpp : 콘솔 응용 프로그램에 대한 진입점을 정의합니다.
-//
-
 #include "stdafx.h"
+#include "Battleship.h"
 
 
-int _tmain(int argc, _TCHAR* argv[])
+Battleship::Battleship()
 {
-	return 0;
+	m_Type = BATTLESHIP;
+	m_Name = "Battleship";
+	m_Mark = "ⓑ";
+	m_Length = 4;
 }
 
+
+Battleship::~Battleship()
+{
+}
+
+
+HitState Battleship::GetHitState()
+{
+	HitState curState = Ship::GetHitState();
+
+	return (curState == DESTROY) ? DESTROY_BATTLESHIP : curState;
+
+}

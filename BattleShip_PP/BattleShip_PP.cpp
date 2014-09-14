@@ -2,16 +2,18 @@
 //
 
 #include "stdafx.h"
-#include <iostream>
-#include <string>
-#include <time.h>
-#include <vector>
-#include <windows.h>
 
 std::vector<std::string> checkUnits;
 
 int _tmain(int argc, _TCHAR* argv[])
 {
+
+	Player player; // 老馆 积己
+	/*
+	Player * pPlayer; = new Player(); // 悼利 积己
+	delete(pPlayer);
+	*/
+
 	//UNREFERENCED_PARAMETER(argc);
 	argc;
 	argv;
@@ -19,7 +21,7 @@ int _tmain(int argc, _TCHAR* argv[])
 	Manager gameManager;
 	std::vector<Player> playerList;
 	Player playerOwn;
-	playerList.push_back(playerOwn);
+	playerList.push_back(playerOwn);  
 
 	gameManager.createNewGame(playerList);
 

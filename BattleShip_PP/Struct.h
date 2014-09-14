@@ -5,9 +5,25 @@ struct Position{
 	int y;
 };
 
-enum PLAYER_TYPE{
+enum PlayerType{
 	PEOPLE,
 	COMPUTER,
-	NETWORK
+	NETWORK,
 };
 
+enum HitResult{
+	HIT,
+	MISS,
+	A_DESTROY,
+	B_DESTROY,
+	C_DESTROY,
+	D_DESTROY,
+};
+
+enum ShipType{
+	SHIP_NONE,
+	AIRCRAFT,
+	BATTLESHIP,
+	CRUISER,
+	DESTROYER,
+};
