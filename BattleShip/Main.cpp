@@ -6,11 +6,13 @@
 
 int _tmain()
 {
+
 	GameManager GM;
-	srand((unsigned)time(NULL));
 
-	GM.StartGame();
 
+	GM.StartWindow();
+
+	getchar();
 	return 0;
 }
 

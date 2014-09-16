@@ -6,7 +6,6 @@ Ship::Ship()
 {
 }
 
-
 Ship::~Ship()
 {
 }

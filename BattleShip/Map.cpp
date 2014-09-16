@@ -13,9 +13,7 @@ Map::~Map()
 
 void Map::InitMap()
 {
-	m_Width = MAP_WIDTH;
-	m_Height = MAP_HEIGHT;
-	memset(m_Field, 0, _countof(m_Field));
+	memset(m_Field, 0, sizeof(int) * MAP_HEIGHT * MAP_WIDTH);
 }
 
 // Field 배열에 지정된 배의 정보를 세팅합니다.

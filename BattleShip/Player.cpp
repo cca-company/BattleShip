@@ -10,7 +10,6 @@ Player::Player()
 	m_ShipList.push_back(new Cruiser());
 	m_ShipList.push_back(new Destroyer());
 	m_ShipList.push_back(new Destroyer());
-
 }
 
 Player::~Player()
@@ -31,7 +30,9 @@ void Player::InitPlayer(PlayerType type)
 
 	if (type == USER)
 	{
-		std::cout << "이름을 입력하세요(최대 10자) : " << std::endl;
+		system("cls");
+		FlushConsoleInputBuffer(GetStdHandle(STD_INPUT_HANDLE));
+		std::cout << "\n\n\n\n\n\n\n\n\t\t\t  이름을 입력하세요(최대 10자)\n\t\t\t   : ";
 		std::cin >> temp;
 
 		std::cin.clear();
@@ -41,9 +42,15 @@ void Player::InitPlayer(PlayerType type)
 	}
 	else if (type == AI) m_Name = "Computer";
 
-	SetShip();
-	m_Life = m_ShipList.size();
+	m_PrevState = MISS;
+	m_PredictDir = NONE;
+	m_PredictPos.x = NULL;
+	m_PredictPos.y = NULL;
+	m_AttackedPos.clear();
 	m_Map.InitMap();
+	m_Life = m_ShipList.size();
+
+	SetShip();
 }
 
 // 배를 배치합니다
@@ -54,6 +61,7 @@ void Player::SetShip()
 	int shipIdx = 1;
 	Position setPos;
 	Direction setDir = NONE;
+	Direction setDirArr[4] = { LEFT, RIGHT, UP, DOWN };
 
 	for (auto &ship : m_ShipList)
 	{
@@ -61,26 +69,115 @@ void Player::SetShip()
 		shipName = ship->GetName();
 		shipHP = ship->GetHP();
 
-		// 배치 초기 위치 랜덤 설정
+		// do-while start :: 위치를 지정하고, 유효하지 않은 위치면 반복
 		do{
-			setPos.x = '1' + rand() % MAP_WIDTH;
-			setPos.y = 'A' + rand() % MAP_HEIGHT;
-			switch (rand() % 4)
+			// 배치 초기 위치 입력받음
+			if (m_Type == USER)
 			{
-			case 0:
-				setDir = LEFT;
-				break;
-			case 1:
-				setDir = RIGHT;
-				break;
-			case 2:
-				setDir = UP;
-				break;
-			case 3:
+				Position cursor;
+				char* objMark = "★☆  ⓐⓑⓒⓓⓓ";
+				int	objIdx;
+				int map[MAP_HEIGHT][MAP_WIDTH];
+				int tempHP;
+				bool isSelected = false;
+
 				setDir = DOWN;
-				break;
-			default:
-				break;
+				m_Map.GetField(map);
+				setPos.x = '1' + MAP_WIDTH / 2 - 1;
+				setPos.y = 'A' + MAP_HEIGHT / 2 - 1;
+
+				// do-while :: 맵 출력
+				do{
+					cursor = setPos;
+					tempHP = shipHP;
+					system("cls");
+
+					printf("\n\n\n\t\t\t     배를 배치할 위치를 선택하세요\n\n");
+
+					printf("\t\t\t   ");
+					for (int i = 0; i < MAP_WIDTH; ++i) printf("   %c", '1' + i);
+
+					printf("\n\t\t\t   ┌─┬─┬─┬─┬─┬─┬─┬─┐\n");
+
+					for (int i = 0; i < MAP_HEIGHT; ++i)
+					{
+						// Player1의 i번째 라인 맵 출력
+						printf("\t\t\t %c ", 'A' + i);
+						printf("│");
+						for (int j = 0; j < MAP_WIDTH; ++j)
+						{
+							objIdx = map[i][j];
+							if (cursor.x == '1' + j && cursor.y == 'A' + i)
+							{
+								printf_s("■│");
+								if (tempHP > 1 && setDir == RIGHT) cursor.x++;
+								else if(tempHP > 1) cursor.y++;
+								--tempHP;
+							}
+							else
+							{
+								printf_s("%c%c│", objMark[(objIdx + 2) * 2], objMark[(objIdx + 2) * 2 + 1]);
+							}
+						}
+
+						printf("\n");
+
+						// 하단라인
+						if (i < MAP_HEIGHT - 1) printf("\t\t\t   ├─┼─┼─┼─┼─┼─┼─┼─┤\n");
+					}
+
+					printf("\t\t\t   └─┴─┴─┴─┴─┴─┴─┴─┘\n");
+
+					// 키보드 입력으로 위치 결정
+					FlushConsoleInputBuffer(GetStdHandle(STD_INPUT_HANDLE));
+					while (true)
+					{
+						if (GetAsyncKeyState(VK_RIGHT) & 0x8000)
+						{
+							if (setPos.x < '0'+MAP_WIDTH) setPos.x++;
+							else continue;
+							break;
+						}
+						if (GetAsyncKeyState(VK_LEFT) & 0x8000)
+						{
+							if (setPos.x > '1') setPos.x--;
+							else continue;
+							break;
+						}
+						if (GetAsyncKeyState(VK_DOWN) & 0x8000)
+						{
+							if (setPos.y < '@'+MAP_HEIGHT) setPos.y++;
+							else continue;
+							break;
+						}
+						if (GetAsyncKeyState(VK_UP) & 0x8000)
+						{
+							if (setPos.y > 'A') setPos.y--;
+							else continue;
+							break;
+						}
+						if (GetAsyncKeyState(VK_SPACE) & 0x8000)
+						{
+							setDir = (setDir == RIGHT) ? DOWN : RIGHT;
+							break;
+						}
+						if (GetAsyncKeyState(VK_RETURN) & 0x8000)
+						{
+							isSelected = true;
+							break;
+						}
+						Sleep(50);
+					}
+
+				} while (!isSelected);
+
+			}
+			// 배치 초기 위치 랜덤 설정
+			else if (m_Type == AI)
+			{
+				setPos.x = '1' + rand() % MAP_WIDTH;
+				setPos.y = 'A' + rand() % MAP_HEIGHT;
+				setDir = setDirArr[rand() % 4];
 			}
 		} while (!IsValidSetPos(setPos.x, setPos.y, setDir, shipHP));
 
@@ -102,93 +199,143 @@ void Player::SetShip()
 // 랜덤 결정한 배의 위치가 유효한지 검사합니다
 bool Player::IsValidSetPos(char setX, char setY, Direction setDir,int shipHP)
 {
+	char xPos, yPos;
 
-	switch (setDir)
+	// 위치가 유효한지 검사
+	if ((setDir == LEFT && setX - shipHP < '1') ||
+		(setDir == RIGHT && setX + shipHP > '1' + MAP_WIDTH) ||
+		(setDir == UP && setY - shipHP < 'A') ||
+		(setDir == DOWN && setY + shipHP > 'A' + MAP_HEIGHT))
 	{
-	case LEFT:
-		if (setX - shipHP < '1') return false;
-		for (int i = 0; i < shipHP; ++i)
-		{
-			if (m_Map.CheckPosFull((char)(setX - i), setY)) return false;
-		}
-		break;
-		 
-	case RIGHT:
-		if (setX + shipHP >= '1' + MAP_WIDTH) return false;
-		for (int i = 0; i < shipHP; ++i)
-		{
-			if (m_Map.CheckPosFull((char)(setX + i), setY)) return false;
-		}
-		break;
+		return false;
+	}
 
-	case UP:
-		if (setY - shipHP < 'A') return false;
-		for (int i = 0; i < shipHP; ++i)
-		{
-			if (m_Map.CheckPosFull(setX, (char)(setY - i))) return false;
-		}
-		break;
+	// 다른 배가 이미 배치되어있는지 검사
+	for (int i = 0; i < shipHP; ++i)
+	{
+		xPos = setX;
+		yPos = setY;
+		if (setDir == LEFT) xPos -= i;
+		else if (setDir == RIGHT) xPos += i;
+		else if (setDir == UP) yPos -= i;
+		else if (setDir == DOWN) yPos += i;
 
-	case DOWN:
-		if (setY + shipHP >= 'A' + MAP_HEIGHT) return false;
-		for (int i = 0; i < shipHP; ++i)
-		{
-			if (m_Map.CheckPosFull(setX, (char)(setY + i))) return false;
-		}
-		break;
-
-	default: return false;
-
+		if (m_Map.CheckPosFull(xPos, yPos)) return false;
 	}
 
 	return true;
 }
 
-// 공격 위치 설정 :: 입력 오류시 messageBox에 메세지 전달
+// 공격 위치 설정 :: 리턴이 false면 재실행, true면 결정
 bool Player::Attack(Position* attackPos, std::string* messageBox)
 {
 	std::string temp;
-	int			enterKey;
 
 	// 유저의 경우 위치 Input
 	if (m_Type == USER)
 	{
-		enterKey = GetAsyncKeyState(VK_RETURN);
-
-
-		/*
-		std::cin >> temp;
-
-		std::cin.clear();
-		std::cin.ignore(INT_MAX, '\n');
-
-		if (temp.size() < 2)
+		while (true)
 		{
-			*messageBox = "Invalid position";
-			return false;
+			if (GetAsyncKeyState(VK_RIGHT) & 0x8000)
+			{
+				if (attackPos->x < '0' + MAP_WIDTH) attackPos->x++;
+				else continue;
+				return false;
+			}
+			if (GetAsyncKeyState(VK_LEFT) & 0x8000)
+			{
+				if (attackPos->x > '1') attackPos->x--;
+				else continue;
+				return false;
+			}
+			if (GetAsyncKeyState(VK_DOWN) & 0x8000)
+			{
+				if (attackPos->y < '@' + MAP_HEIGHT) attackPos->y++;
+				else continue;
+				return false;
+			}
+			if (GetAsyncKeyState(VK_UP) & 0x8000)
+			{
+				if (attackPos->y > 'A') attackPos->y--;
+				else continue;
+				return false;
+			}
+			if (GetAsyncKeyState(VK_RETURN) & 0x8000)
+			{
+				break;
+			}
+			Sleep(50);
 		}
 
-		attackPos->x = temp.at(1);
-		attackPos->y = temp.at(0);
-
-		// 입력 위치 유효성 검사
-		if (attackPos->y >= 'a' && attackPos->x < 'a' + MAP_HEIGHT) 
-			attackPos->y = attackPos->y - 'a' + 'A';
-
-		if (attackPos->x < '1' || attackPos->x >= '1' + MAP_WIDTH ||
-			attackPos->y < 'A' || attackPos->y >= 'A' + MAP_HEIGHT)
-		{
-			*messageBox = "Invalid position";
-			return false;
-		}
-		*/
 	}
-	// AI의 경우 랜덤 결정
+	// AI 추적 알고리즘
 	else if (m_Type == AI)
 	{
-		Sleep(1000);
-		attackPos->x = '1' + rand() % MAP_WIDTH;
-		attackPos->y = 'A' + rand() % MAP_HEIGHT;
+
+		if (m_PredictPos.x == NULL && m_PredictPos.y == NULL )
+		{
+			if (m_PrevState == HIT)
+			{
+				m_PredictPos = m_AttackedPos.back();
+				m_PredictDir = LEFT;
+				return false;
+			}
+			else
+			{
+				attackPos->x = '1' + rand() % MAP_WIDTH;
+				attackPos->y = 'A' + rand() % MAP_HEIGHT;
+			}
+		}
+		else
+		{
+			Position prevPos = m_AttackedPos.back();
+
+			if (m_PrevState == MISS)
+			{
+				prevPos = m_PredictPos;
+				switch (m_PredictDir)
+				{
+				case LEFT:
+					m_PredictDir = RIGHT;
+					break;
+				case RIGHT:
+					m_PredictDir = UP;
+					break;
+				case UP:
+					m_PredictDir = DOWN;
+					break;
+				case DOWN:
+					m_PredictDir = NONE;
+					m_PredictPos.x = NULL;
+					m_PredictPos.y = NULL;
+					return false;
+					break;
+				}
+			}
+			attackPos->x = prevPos.x;
+			attackPos->y = prevPos.y;
+
+			if (m_PredictDir == LEFT) attackPos->x = prevPos.x - 1;
+			else if (m_PredictDir == RIGHT)  attackPos->x = prevPos.x + 1;
+			else if (m_PredictDir == UP)  attackPos->y = prevPos.y - 1;
+			else if (m_PredictDir == DOWN)  attackPos->y = prevPos.y + 1;
+
+			if (attackPos->x < '1' || attackPos->x >= '1' + MAP_WIDTH ||
+				attackPos->y < 'A' || attackPos->y >= 'A' + MAP_HEIGHT)
+			{
+				m_PrevState = MISS;
+				return false;
+			}
+			
+			if (m_PrevState != MISS && m_PrevState != HIT)// DESTROY
+			{
+				m_PredictDir = NONE;
+				m_PredictPos.x = NULL;
+				m_PredictPos.y = NULL;
+				return false;
+			}
+		}
+
 	}
 
 	// 이미 공격한 위치일 경우
@@ -198,6 +345,7 @@ bool Player::Attack(Position* attackPos, std::string* messageBox)
 		{
 			*messageBox = "This position already entered";
 		}
+		m_PrevState = MISS;
 		return false;
 	}
 
@@ -235,7 +383,6 @@ void Player::GetPlayerMap(int map[MAP_HEIGHT][MAP_WIDTH])
 void Player::PrintMyShip(int shipIdx, bool inverseOp)
 {
 	Ship*	curShip = m_ShipList.at(shipIdx);
-	int		shipLength = curShip->GetLength();
 	int		curHP	= curShip->GetHP();
 
 	if (!inverseOp)

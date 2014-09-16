@@ -40,6 +40,9 @@
       <Filter>Ship</Filter>
     </ClInclude>
     <ClInclude Include="struct.h" />
+    <ClInclude Include="Network.h" />
+    <ClInclude Include="PacketType.h" />
+    <ClInclude Include="ShipData.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp" />
@@ -68,5 +71,9 @@
     <ClCompile Include="Destroyer.cpp">
       <Filter>Ship</Filter>
     </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <Library Include="BGNL.lib" />
+    <Library Include="BGNL_debug.lib" />
   </ItemGroup>
 </Project>
