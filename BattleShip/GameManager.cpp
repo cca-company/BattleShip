@@ -23,7 +23,7 @@ void GameManager::StartWindow()
 	int cursor = 1;
 	while (true)
 	{
-		system("cls");
+		//system("cls");
 		printf("BATTLESHIP\n");
 		if (cursor == 1) HLight("* SOLO PLAY *\n");
 		else printf("* SOLO PLAY *\n");
@@ -50,7 +50,7 @@ void GameManager::StartWindow()
 				{
 				case 1:StartGame();
 					break;
-				case 2:StartGame();
+				case 2:StartNetworkGame();
 					break;
 				case 3:return;
 					break;
@@ -148,8 +148,188 @@ int GameManager::StartGame()
 // 온라인 플레이를 시작합니다.
 int GameManager::StartNetworkGame()
 {
-	InitNetworkGame();
+	Network		network;
+	PacketType	type;
+	ErrorType	error;
+	Position	attackPos;
+	HitState	hitState;
+	Coord		pos;
+	HitState	ATTACK_RESULT[] = { DESTROY, MISS, HIT, DESTROY_AIRCRAFT, DESTROY_BATTLESHIP, DESTROY_CRUISER, DESTROY_DESTROYER };
+	std::string ATTACK_RESULT_STR[] = { "Miss", "Hit", "Destroy", "Destroy Aircraft", "Destroy Battleship",
+										"Destroy Cruiser", "Destroy Destroyer"};
+
+	char		mapData[MAP_SIZE];
+
+	try	// 예외 처리를 위해 try문으로 모두 감싼다.
+	{
+		InitNetworkGame(network);
+		
+		bool allOver = false;
+		
+		while (!allOver)
+		{
+			m_Player1->InitPlayer(AI);
+			// 배 배치
+			while (true)
+			{
+				MkMapData(mapData);
+
+				error = network.SubmitMap(mapData);
+				if (error == ET_INVALID_MAP)
+					puts("유효하지 않은 맵 데이터입니다.");
+				else
+					break;
+			}
+
+			// 게임 루프 시작
+			bool gameOver = false;
+			while (!gameOver)
+			{
+				error = network.GetPacketType(&type);
+
+				switch (type)
+				{
+					// 에러가 발생하는 경우(상대방의 접속 종료)
+				case PKT_SC_ERROR:
+					if (error == ET_OPPOSITION_DISCONNECTED)
+						puts("상대방의 접속이 끊어졌습니다.");
+					else
+						puts("알 수 없는 에러입니다.");
+					return 0;
+
+					// 내 차례
+				case PKT_SC_MY_TURN:
+				{
+					/*
+					** 공격 위치 전송
+					x, y는 0~7 사이의 정수이다.
+					*/
+					while (true)
+					{
+						// 자신의 공격 위치 제작 함수를 사용한다.
+
+						// 커서 위치 및 메세지 초기화
+						attackPos.x = '1' + MAP_WIDTH / 2;
+						attackPos.y = 'A' + MAP_HEIGHT / 2;
+
+						// 공격 위치 선택
+						while (!m_Player1->Attack(&attackPos, &m_Message));
+						pos.mX = attackPos.x-'1';
+						pos.mY = attackPos.y-'A';
+
+						error = network.SubmitAttack(pos);
+						if (error == ET_INVALID_ATTACK)
+							puts("유효하지 않은 공격 위치입니다.");
+						else
+							break;
+					}
+					break;
+				}
+
+					// 공격 결과
+				case PKT_SC_ATTACK_RESULT:
+				{
+					Network::AttackResultData attackResult = network.GetAttackResult();
+					if (attackResult.isMine)
+					{
+						puts("공격 결과:");
+						// 자신의 공격 결과 처리 함수를 사용한다.
+						hitState = ATTACK_RESULT[attackResult.attackResult];
+						m_Player1->SetPrevState(hitState);
+					}
+					else
+					{
+						puts("피격 결과:");
+						// 자신의 공격 결과 처리 함수를 사용한다.
+						attackPos.x = attackResult.pos.mX+'1';
+						attackPos.y = attackResult.pos.mY+'A';
+						hitState = m_Player1->HitCheckMyShip(attackPos);
+					}
+					printf_s("X: %c, Y: %c, RESULT: %s\n", attackPos.x, attackPos.y, ATTACK_RESULT_STR[hitState].c_str());
+					break;
+				}
+
+					// 게임 종료
+				case PKT_SC_GAME_OVER:
+				{
+					Network::GameResultData gameResult = network.GetGameResult();
+					if (gameResult.isWinner)
+						puts("승리!!!");
+					else
+						puts("패배...");
+					printf_s("턴 수: %d\n", gameResult.turns);
+					gameOver = true;
+					break;
+				}
+
+				default:
+					throw Network::UNEXPECTED_PACKET;
+					break;
+				}
+			}
+
+			/*
+			** 종료후 처리
+			*/
+			network.GetPacketType(&type);
+
+			if (type == PKT_SC_NEXT_GAME)
+			{
+				puts("다음 게임을 준비해주세요.");
+			}
+			else if (type == PKT_SC_ALL_OVER)
+			{
+				Network::FinalResultData finalResult = network.GetFinalResult();
+				puts("모두 종료");
+				printf_s("승리 횟수: %d, 평균 턴 수: %.1f", finalResult.winCount, finalResult.avgTurns);
+
+				allOver = true;
+			}
+			else
+				throw Network::UNEXPECTED_PACKET;
+		}
+	}
+	catch (Network::Exception ex)
+	{
+		switch (ex)
+		{
+		case Network::NETWORK_ERROR:
+			puts("네트워크에 문제가 발생했습니다.");
+			break;
+		case Network::SERVER_CLOSED:
+			puts("서버와의 연결이 끊어졌습니다.");
+			break;
+		case Network::PARAMETER_ERROR:
+			puts("함수의 인수가 잘못되었습니다.");
+			break;
+		case Network::UNEXPECTED_PACKET:
+			puts("서버에서 잘못된 정보가 전송되었습니다.");
+			break;
+		default:
+			break;
+		}
+	}
 }
+
+void GameManager::MkMapData(OUT char* mapData)
+{
+	int map1[MAP_HEIGHT][MAP_WIDTH];
+	int	mapValue;
+	char convertValue[] = { MD_NONE, MD_AIRCRAFT, MD_BATTLESHIP, MD_CRUISER, MD_DESTROYER1, MD_DESTROYER2 };
+
+	m_Player1->GetPlayerMap(map1);
+
+	for (int i = 0; i < MAP_HEIGHT; i++)
+	{
+		for (int j = 0; j < MAP_WIDTH; j++)
+		{
+			mapValue = map1[i][j];
+			if (mapValue < 0) mapValue = 0;
+			mapData[i*MAP_HEIGHT + j] = convertValue[mapValue];
+		}
+	}
+}
+
 
 // 게임 초기 정보를 세팅합니다.
 void GameManager::InitGame()
@@ -163,10 +343,8 @@ void GameManager::InitGame()
 	m_Player2->InitPlayer(AI);
 }
 
-void GameManager::InitNetworkGame()
+void GameManager::InitNetworkGame(Network& network)
 {
-	Network		network;
-	PacketType	type;
 	ErrorType	error;
 
 	srand((unsigned)time(NULL));
@@ -183,16 +361,54 @@ void GameManager::InitNetworkGame()
 
 	try
 	{
-		network.Connect("127.0.0.1", 10000);
+		network.Connect("10.73.42.117", 9001);
 	}
 	catch (Network::Exception ex)
 	{
-		switch ();
+		switch (ex)
+		{
+		case Network::NETWORK_ERROR:
+			puts("서버와 연결에 실패했습니다.");
+			break;
+		case Network::PARAMETER_ERROR:
+			puts("함수의 인수가 잘못되었습니다.");
+			break;
+		}
+		return;
 	}
-	network.SubmitName(L"DongYu", 141040);
+	puts("접속 성공!");
 
-	Network::GameStartData gameStartData;
-	network.WaitForStart(&gameStartData);
+	try	// 예외 처리를 위해 try문으로 모두 감싼다.
+	{
+		network.SubmitName(L"DongYu", 141040);
+
+		Network::GameStartData gameStartData;
+		puts("게임 시작 대기중");
+		network.WaitForStart(&gameStartData);
+		wprintf_s(L"매칭되었습니다. 상대방 이름: %s, 학번: %d\n", gameStartData.oppositionName, gameStartData.oppositionStudentID);
+
+
+	}
+	catch (Network::Exception ex)
+	{
+		switch (ex)
+		{
+		case Network::NETWORK_ERROR:
+			puts("네트워크에 문제가 발생했습니다.");
+			break;
+		case Network::SERVER_CLOSED:
+			puts("서버와의 연결이 끊어졌습니다.");
+			break;
+		case Network::PARAMETER_ERROR:
+			puts("함수의 인수가 잘못되었습니다.");
+			break;
+		case Network::UNEXPECTED_PACKET:
+			puts("서버에서 잘못된 정보가 전송되었습니다.");
+			break;
+		default:
+			break;
+		}
+	}
 
 }
 

@@ -10,7 +10,7 @@ int _tmain()
 	GameManager GM;
 
 
-	GM.StartWindow();
+	GM.StartNetworkGame();
 
 	getchar();
 	return 0;
