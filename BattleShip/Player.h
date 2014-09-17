@@ -17,6 +17,7 @@ public:
 	
 	/* activity function */
 	bool					Attack(OUT Position* attackPos, OUT std::string* messageBox);  // 공격 위치를 지정합니다
+	void					GetAttackResult();
 	HitState				HitCheckMyShip(Position attackPos);  // 상대 공격에 입은 피해를 체크합니다
 	void					PrintMyShip(int shipIdx, bool inverseOp);
 
@@ -26,23 +27,30 @@ public:
 	void					GetPlayerMap(OUT int map[MAP_HEIGHT][MAP_WIDTH]);
 	std::string				GetName(){ return m_Name; }
 	PlayerType				GetType(){ return m_Type; }
-	void					SetPrevState(HitState state){ m_PrevState = state; }
 
 protected:
 	void					SetShip();  // 자신이 가진 배를 배치합니다
 	bool					IsValidSetPos(char setX, char setY, Direction setDir, int shipHP);  // 랜덤 배치한 배 위치가 유효한가 검사합니다
 
+	/* AI function */
+	void					InitPotenMap();
+	void					SetPotenMap(Position SetPos, int PotenLv);
+	Position				GetPotenPos();
+	Position				HuntNextPos(Position SetPos);
 
 protected:
 	PlayerType				m_Type;
 	std::string				m_Name;
 	int						m_Life;
-	HitState				m_PrevState;
 	Direction				m_PredictDir;
 	Position				m_PredictPos;
+	std::vector <Position>	m_HittedPos;
 	std::vector <Position>	m_AttackedPos;
 
 	Map						m_Map;
 	std::vector <Ship*>		m_ShipList;
+
+	int						m_EnemyMap[MAP_HEIGHT][MAP_WIDTH];
+	std::vector <Ship*>		m_EnemyShip;
 };
 

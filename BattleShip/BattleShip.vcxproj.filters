@@ -43,6 +43,7 @@
     <ClInclude Include="Network.h" />
     <ClInclude Include="PacketType.h" />
     <ClInclude Include="ShipData.h" />
+    <ClInclude Include="Renderer.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp" />
@@ -69,6 +70,9 @@
       <Filter>Ship</Filter>
     </ClCompile>
     <ClCompile Include="Destroyer.cpp">
+      <Filter>Ship</Filter>
+    </ClCompile>
+    <ClCompile Include="Renderer.cpp">
       <Filter>Ship</Filter>
     </ClCompile>
   </ItemGroup>

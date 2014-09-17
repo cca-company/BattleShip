@@ -37,11 +37,11 @@ enum ShipType{
 	NONE	: 초기값
 */
 enum Direction{
-	LEFT,
-	RIGHT,
-	UP,
-	DOWN,
-	NONE,
+	NONE = 0,
+	LEFT = 1,
+	RIGHT = 2,
+	UP = 3,
+	DOWN = 4,
 };
 
 
@@ -64,12 +64,13 @@ enum PlayerType{
 	DESTROY_~ : Ship객체에서 DESTROY리턴시 각각 자식 객체에서 오버라이딩
 */
 enum HitState{
-	MISS = 0,
-	HIT = 1,
-	DESTROY = 2,
-	DESTROY_AIRCRAFT = 3,
-	DESTROY_BATTLESHIP = 4,
-	DESTROY_CRUISER = 5,
-	DESTROY_DESTROYER = 6,
+	OVER = 0,
+	MISS = 1,
+	HIT = 2,
+	DESTROY = 3,
+	DESTROY_AIRCRAFT = 4,
+	DESTROY_BATTLESHIP = 5,
+	DESTROY_CRUISER = 6,
+	DESTROY_DESTROYER = 7,
 };
 

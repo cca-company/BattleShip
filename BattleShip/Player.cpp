@@ -410,3 +410,115 @@ void Player::PrintMyShip(int shipIdx, bool inverseOp)
 		for (int i = 0; i < 5 - curHP; ++i) printf("   ");
 	}
 }
+
+// 가능성 맵 초기화
+void Player::InitPotenMap()
+{
+	int shipHP;
+	Direction dir;
+
+	for (int i = 0; i < MAP_HEIGHT; ++i){
+		for (int j = 0; j < MAP_WIDTH; ++j){
+			if (m_EnemyMap[i][j] == -1) continue;
+			m_EnemyMap[i][j] = 0;
+		}
+	}
+
+	for (auto& ship : m_EnemyShip)
+	{
+		shipHP = ship->GetHP();
+		for (int i = 0; i < MAP_HEIGHT; ++i){
+			for (int j = 0; j < MAP_WIDTH; ++j){
+
+				if (m_EnemyMap[i][j] == -1) continue;
+
+				for (int k = 0; k < shipHP; ++k)
+				{
+					if (j + k <= MAP_WIDTH - shipHP && m_EnemyMap[i][j + k] == -1) continue;
+					if (i + k <= MAP_HEIGHT - shipHP && m_EnemyMap[i + k][j] == -1) continue;
+				}
+
+				for (int k = 0; k < shipHP; ++k)
+				{
+					if (j + k <= MAP_WIDTH - shipHP) m_EnemyMap[i][j + k]++;
+					if (i + k <= MAP_HEIGHT - shipHP) m_EnemyMap[i + k][j]++;
+				}
+
+			}
+		}
+	}
+}
+
+void Player::SetPotenMap(Position SetPos, int PotenLv)
+{
+	m_EnemyMap[SetPos.y-'A'][SetPos.x+'1'] = PotenLv;
+}
+
+Position Player::GetPotenPos()
+{
+	std::vector<Position>	maxPotenPosVector;
+	Position				maxPotenPos;
+
+	maxPotenPos.x = 0;
+	maxPotenPos.y = 0;
+
+	for (int i = 0; i < MAP_HEIGHT; ++i){
+		for (int j = 0; j < MAP_WIDTH; ++j){
+
+			if (m_EnemyMap[i][j] < m_EnemyMap[maxPotenPos.y][maxPotenPos.x]) continue;
+
+			if (m_EnemyMap[i][j] > m_EnemyMap[maxPotenPos.y][maxPotenPos.x])
+			{
+				maxPotenPosVector.clear();
+			}
+
+			maxPotenPos.x = j;
+			maxPotenPos.y = i;
+			maxPotenPosVector.push_back(maxPotenPos);
+		
+		}
+	}
+
+	return maxPotenPosVector.at(rand() % maxPotenPosVector.size());
+}
+
+Position Player::HuntNextPos(Position SetPos)
+{
+	Position maxPotenPos;
+	Position aroundPos[4];
+
+	// LEFT
+	aroundPos[0].x = SetPos.x - 1;
+	aroundPos[0].y = SetPos.y;
+
+	// RIGHT
+	aroundPos[1].x = SetPos.x + 1;
+	aroundPos[1].y = SetPos.y;
+
+	// UP
+	aroundPos[2].x = SetPos.x;
+	aroundPos[2].y = SetPos.y - 1;
+	
+	// DOWN
+	aroundPos[3].x = SetPos.x;
+	aroundPos[3].y = SetPos.y + 1;
+
+	if (m_PredictDir == NONE)
+	{
+		for (int i = 0; i < _countof(aroundPos); ++j)
+		{
+			char x = aroundPos[i].x;
+			char y = aroundPos[i].y;
+			if ( x >= '1' + MAP_WIDTH ||  x < '1' ||
+				y >= 'A' + MAP_HEIGHT ||  y < 'A' ||
+				m_EnemyMap[y][x] == 0 )
+				continue;
+
+			if (m_EnemyMap[y][x] > )
+		}
+	}
+	else
+	{
+
+	}
+}
