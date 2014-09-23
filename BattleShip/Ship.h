@@ -18,10 +18,10 @@ public:
 	virtual	HitState		GetHitState();  // Hit 결과를 리턴합니다
 
 	/* state function */
-	std::string				GetName(){ return m_Name; }  // 배 이름을 리턴합니다
-	ShipType				GetType(){ return m_Type; }  // 배 타입을 리턴합니다
-	int						GetHP(){ return m_HP; }  // 배 현재 HP를 리턴합니다
-	int						GetLength(){ return m_Length; }  // 배 전체 길이를 리턴합니다
+	std::string				GetName()		{ return m_Name; }  // 배 이름을 리턴합니다
+	ShipType				GetType()		{ return m_Type; }  // 배 타입을 리턴합니다
+	int						GetHP()			{ return m_HP; }  // 배 현재 HP를 리턴합니다
+	int						GetLength()		{ return m_Length; }  // 배 전체 길이를 리턴합니다
 
 
 protected:

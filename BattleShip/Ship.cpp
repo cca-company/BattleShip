@@ -23,8 +23,7 @@ bool Ship::SetPos(char posX, char posY)
 	newPos.x = posX;
 	newPos.y = posY;
 
-	if (posX < '1' || posX >= '1' + MAP_WIDTH ||
-		posY < 'A' || posY >= 'A' + MAP_HEIGHT)
+	if (posX < '1' || posX >= '1' + MAP_WIDTH || posY < 'A' || posY >= 'A' + MAP_HEIGHT)
 		return false;
 
 	if ((int)m_Pos.size() > m_HP) return false;

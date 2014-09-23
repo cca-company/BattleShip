@@ -1,6 +1,7 @@
 #pragma once
 #include "stdafx.h"
 #include "Player.h"
+#include "Render.h"
 
 class GameManager
 {
@@ -8,21 +9,19 @@ public:
 	/* initialize function */
 	GameManager();
 	~GameManager();
-	void				InitGame(); // 게임 초기 정보를 세팅합니다
-	void				InitNetworkGame(Network& network); // 게임 초기 정보를 세팅합니다
 
-	void				StartWindow(); // 시작화면을 출력합니다
-	int					StartGame(); // 게임을 시작합니다
-	int					StartNetworkGame(); // 온라인 플레이를 시작합니다
+	void				StartGame(); // 게임을 시작합니다
+	int					StartSoloPlay(); // 온라인 플레이를 시작합니다
+	int					StartNetworkPlay(); // 온라인 플레이를 시작합니다
 
 protected:
-	void				PrintWindow(std::string notice,Position attackPos,Player* attacker); // 현재 게임 상태를 화면에 출력합니다
-	void				HLight(std::string text);
-	void				MkMapData(OUT char* mapData);
+	Network				ConnectNetwork(); // 온라인 플레이를 위해 네트워크에 연결합니다
+	void				InitGame(PlayerType playerType1, PlayerType playerType2); // 게임 정보를 초기화합니다
+	void				InitNetworkGame(Network network); // 네트워크 게임 정보를 초기화합니다
 
 protected:
 	Player*				m_Player1;
 	Player*				m_Player2;
+	Render				m_Render;
 	int					m_PlayTurn;
-	std::string			m_Message;
 };

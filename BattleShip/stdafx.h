@@ -17,7 +17,6 @@
 #include <queue>
 #include <algorithm>
 #include "struct.h"
-
 #pragma comment(lib, "BGNL_debug.lib")
 #include "Network.h"
 #include <Windows.h>
