@@ -110,10 +110,10 @@ bool Player::IsValidSetPos(char setX, char setY, Direction setDir,int shipHP)
 	{
 		xPos = setX;
 		yPos = setY;
-		if (setDir == LEFT) xPos -= i;
-		else if (setDir == RIGHT) xPos += i;
-		else if (setDir == UP) yPos -= i;
-		else if (setDir == DOWN) yPos += i;
+		if (setDir == LEFT) xPos -= (char)i;
+		else if (setDir == RIGHT) xPos += (char)i;
+		else if (setDir == UP) yPos -= (char)i;
+		else if (setDir == DOWN) yPos += (char)i;
 
 		if (m_Map.CheckPosFull(xPos, yPos)) return false;
 	}
